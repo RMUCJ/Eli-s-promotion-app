@@ -94,16 +94,28 @@ The most consequential one: **the FLIP formula on p11 contradicts the worked exa
 
 ## Setup (GitHub Pages)
 
-The app is plain HTML, CSS and JavaScript with **no build step**, so Pages serves it directly.
+The app is plain HTML, CSS and JavaScript with **no build step**. It is published by
+`.github/workflows/deploy.yml`, which runs on every push to the default branch.
 
-This is a one-time, three-click step that only a repository owner can do — it can't be done from code.
+**One setting, once** — Settings → Pages → Source → **GitHub Actions**.
 
-1. Open **[Settings → Pages](https://github.com/RMUCJ/Eli-s-promotion-app/settings/pages)**
-2. Under **Source**, choose **Deploy from a branch**
-3. Leave the branch as `claude/promotion-test-prep-app-koldll` (it is this repository's default branch) and the folder as **`/ (root)`**
-4. Click **Save**, wait about a minute, then open the link above
+That step cannot be automated. Creating a Pages site needs repository-admin
+rights, and the built-in `GITHUB_TOKEN` cannot be granted them, so
+`actions/configure-pages` with `enablement: true` fails with *Resource not
+accessible by integration*. The same restriction blocks `workflow_dispatch` and
+re-runs from an integration, so after changing that setting the deploy is
+triggered by pushing a commit (or by **Actions → Deploy to GitHub Pages → Run
+workflow** in the browser).
 
-Publishing the site makes this repository's contents publicly readable — including the study guide material in `data/questions.js` and `tools/source-text.txt`.
+The workflow publishes only what the app needs — `index.html`, the manifest,
+`robots.txt`, `css/`, `js/` and the sealed bundle. The tooling, docs and
+workflows stay in the repository but are never served. The leak check runs
+again immediately before publishing, so a deploy cannot ship a key or any
+plaintext even if an earlier check was skipped.
+
+Publishing makes this repository's contents publicly readable — which is safe
+here precisely because the study content is sealed. Nothing in the repository
+is legible without the key.
 
 ## Running it locally
 
