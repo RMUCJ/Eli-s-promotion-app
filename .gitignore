@@ -1,0 +1,14 @@
+# The decryption key. Never commit this — it is what protects the content.
+.key
+
+# Plaintext study content. The repository holds only the sealed version
+# (data/bank.enc.js). Regenerate these with: node tools/seal.mjs unseal
+data/questions.js
+tools/source-text.txt
+
+node_modules/
+package-lock.json
+.DS_Store
+*.log
+shot-*.png
+docs/notes.md

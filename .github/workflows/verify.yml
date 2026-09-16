@@ -1,0 +1,41 @@
+name: Verify question bank
+
+# The question bank is the product. This runs the correctness checker on every
+# change so a bad edit can never reach the published app unnoticed.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check nothing secret is committed
+        run: node tools/check-leaks.mjs
+
+      - name: Check JavaScript parses
+        run: |
+          for f in js/*.js data/bank.enc.js; do
+            node --check "$f"
+          done
+
+      # The study content is sealed in this repository. These steps can only
+      # check it if the MQI_KEY repository secret is set; without it they skip
+      # with a notice rather than passing silently. See README.
+      - name: Verify question bank (schema, citations, grounding, arithmetic)
+        env:
+          MQI_KEY: ${{ secrets.MQI_KEY }}
+        run: node tools/verify.mjs
+
+      - name: Test grader and spaced-repetition engine
+        env:
+          MQI_KEY: ${{ secrets.MQI_KEY }}
+        run: node tools/test-logic.mjs
