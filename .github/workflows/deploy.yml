@@ -1,7 +1,12 @@
 name: Deploy to GitHub Pages
 
-# Publishes the site. `enablement: true` turns GitHub Pages on the first time
-# this runs, so the site goes live without anyone visiting repository settings.
+# Publishes the site.
+#
+# REQUIRES ONE SETTING, ONCE: Settings -> Pages -> Source -> "GitHub Actions".
+# This cannot be automated: creating a Pages site needs admin rights, and the
+# built-in GITHUB_TOKEN cannot be granted them (`enablement: true` fails with
+# "Resource not accessible by integration"). After that one change this
+# workflow deploys on every push with no further clicks.
 on:
   push:
     branches: ['claude/promotion-test-prep-app-koldll']
@@ -40,9 +45,16 @@ jobs:
           echo "Publishing:"
           find _site -type f | sort
 
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Explain a Pages misconfiguration
+        if: failure() && steps.pages.outcome == 'failure'
+        run: |
+          echo "::error::GitHub Pages is not configured for this repository."
+          echo "::error::Fix: Settings -> Pages -> Source -> 'GitHub Actions', then re-run this workflow."
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:
